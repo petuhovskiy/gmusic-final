@@ -32,6 +32,39 @@ def save_my_playlists_content():
     with open('my_playlists.json', 'w') as outfile:
         json.dump(data, outfile)
 
+def save_my_likes():
+    data = mobile.get_top_songs()
+    with open('my_likes.json', 'w') as outfile:
+        json.dump(data, outfile)
+
+def save_my_albums():
+    albums = dict()
+    
+    library = mobile.get_all_songs()
+
+    albums_cnt = 0
+
+    for track in library:
+        if not 'albumId' in track:
+            continue
+
+        album_id = track['albumId']
+        if album_id in albums:
+            continue
+        
+        albums_cnt += 1
+        print(album_id)
+        try:
+            albums[album_id] = mobile.get_album_info(album_id)
+        except Exception as e:
+            print(e)
+        time.sleep(0.3)
+
+    print('albums_cnt', albums_cnt)
+
+    with open('my_albums.json', 'w') as outfile:
+        json.dump(albums, outfile)
+
 def cnv(t):
     if t == None:
         return ''
@@ -216,3 +249,5 @@ def download_library(loc='./tracks'):
 # save_my_playlists_content()
 # fix_uploaded_tracks()
 # download_library()
+# save_my_likes()
+# save_my_albums()
