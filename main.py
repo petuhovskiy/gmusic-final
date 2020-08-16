@@ -147,8 +147,8 @@ def tagTrack(track, file):
 
     audiofile.tag.track_num = (track.get('trackNumber', None), track.get('totalTrackCount', None))
 
-    if 'genre' in track and track['genre'] != '':
-        audiofile.tag.genre = track['genre']
+    if 'genre' in track and track['genre'].strip() != '':
+        audiofile.tag.genre = track['genre'].strip()
 
     audiofile.tag.disc_num = (track.get('discNumber', None), track.get('totalDiscCount', None))
 
@@ -177,22 +177,38 @@ def download_track(track, file):
     tagTrack(track, file)
 
     print(file)
-    time.sleep(40)
+    time.sleep(35)
 
 def download_library(loc='./tracks'):
     library = mobile.get_all_songs()
+
+    tracks_count = len(library)
+    print('tracks_count:', tracks_count)
+
+    not_found = 0
+    bad_duration = 0
 
     for track in library:
         file = loc + '/' + track['id'] + '.mp3'
         try:
             st = os.stat(file)
         except:
+            not_found += 1
+            print('no file found', file, track)
             download_track(track, file)
             continue
 
-        # if 'estimatedSize' in track and abs(st.st_size - int(track['estimatedSize'])) > 700000:
-        #     print('warn: size mismatch', st.st_size, int(track['estimatedSize']))
-        #     print(track)
+        audiofile = eyed3.load(file)
+
+        tag_length = audiofile.info.time_secs * 1000
+        gpm_length = int(track['durationMillis'])
+
+        if abs(tag_length - gpm_length) > 3000:
+            bad_duration += 1
+            print('duration mismatch: ', tag_length, 'vs', gpm_length, track)
+
+    print('not_found:', not_found)
+    print('bad_duration', bad_duration)
 
 
 # save_library()
